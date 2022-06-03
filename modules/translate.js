@@ -1,4 +1,7 @@
 import axios from "axios";
+import axiosRetry from "axios-retry";
+
+axiosRetry(axios, { retries: 3 });
 
 export default async function translate(
   sourceText,
@@ -100,6 +103,11 @@ export default async function translate(
     },
   });
 
-  const translatedText = trText.data[0][0][0];
-  return translatedText;
+  try {
+    const translatedText = trText.data[0][0][0];
+    return translatedText;
+  } catch (error) {
+    console.log(trText.data);
+    console.log("테에엥...");
+  }
 }
