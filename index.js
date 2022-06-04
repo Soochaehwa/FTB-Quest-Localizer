@@ -9,8 +9,8 @@ async function questExtract(chapterFile, modPackName, isTranslate, targetLang) {
     .readFileSync(`./ftbquests/chapters/${chapterFile}`, "utf-8")
     .replaceAll('\\"', "'");
 
-  !fs.existsSync("./output/chapters") &&
-    fs.mkdirSync("./output/chapters", { recursive: true });
+  !fs.existsSync(`./output/${modPackName}/chapters`) &&
+    fs.mkdirSync(`./output/${modPackName}/chapters`, { recursive: true });
 
   let rewriteChapter = questChapter;
   let lang = {};
@@ -26,20 +26,20 @@ async function questExtract(chapterFile, modPackName, isTranslate, targetLang) {
 
   if (!titles && !subTitles && !descriptions) return;
 
-  function getString(text, part) {
+  const getString = (text, part) => {
     const stringRegex = /(?<=("))(?:(?=(\\?))\2.)*?(?=\1)/gm;
     return text
       .replace(`${part}: `, "")
       .toString()
       .replaceAll('""', "")
       .match(stringRegex);
-  }
+  };
 
-  function removeEmpty(array) {
+  const removeEmpty = (array) => {
     return array.filter((e) => e);
-  }
+  };
 
-  function convert(array, part) {
+  const convert = (array, part) => {
     return new Promise(async (resolve) => {
       const sourceStrings = removeEmpty(
         array.flatMap((el) => getString(el, `${part}`))
@@ -74,7 +74,7 @@ async function questExtract(chapterFile, modPackName, isTranslate, targetLang) {
       });
       resolve();
     });
-  }
+  };
 
   if (titles) {
     await convert(titles, "title");
@@ -86,27 +86,42 @@ async function questExtract(chapterFile, modPackName, isTranslate, targetLang) {
     await convert(descriptions, "description");
   }
 
-  fs.writeFileSync(`./output/chapters/${chapterFile}`, rewriteChapter);
+  fs.writeFileSync(
+    `./output/${modPackName}/chapters/${chapterFile}`,
+    rewriteChapter
+  );
 
-  if (fs.existsSync("./output/en_us.json")) {
-    const langFile = fs.readFileSync(`./output/en_us.json`, "utf-8");
+  if (fs.existsSync(`./output/${modPackName}/en_us.json`)) {
+    const langFile = fs.readFileSync(
+      `./output/${modPackName}/en_us.json`,
+      "utf-8"
+    );
     lang = { ...lang, ...JSON.parse(langFile) };
-    fs.writeFileSync(`./output/en_us.json`, JSON.stringify(lang, null, 2));
+    fs.writeFileSync(
+      `./output/${modPackName}/en_us.json`,
+      JSON.stringify(lang, null, 2)
+    );
   } else {
-    fs.writeFileSync(`./output/en_us.json`, JSON.stringify(lang, null, 2));
+    fs.writeFileSync(
+      `./output/${modPackName}/en_us.json`,
+      JSON.stringify(lang, null, 2)
+    );
   }
 
   if (isTranslate) {
-    if (fs.existsSync("./output/translated.json")) {
-      const langFile = fs.readFileSync(`./output/translated.json`, "utf-8");
+    if (fs.existsSync(`./output/${modPackName}/translated.json`)) {
+      const langFile = fs.readFileSync(
+        `./output/${modPackName}/translated.json`,
+        "utf-8"
+      );
       translatedLang = { ...translatedLang, ...JSON.parse(langFile) };
       fs.writeFileSync(
-        `./output/translated.json`,
+        `./output/${modPackName}/translated.json`,
         JSON.stringify(translatedLang, null, 2)
       );
     } else {
       fs.writeFileSync(
-        `./output/translated.json`,
+        `./output/${modPackName}/translated.json`,
         JSON.stringify(translatedLang, null, 2)
       );
     }
@@ -133,7 +148,7 @@ function prompt() {
       type: "input",
       filter: (value) => {
         const valid = /[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/ ]/gm;
-        const result = value.replace(valid, "").toLowerCase();
+        const result = value.replace(valid, "");
         return result;
       },
     },
