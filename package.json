@@ -1,24 +1,25 @@
 {
   "name": "ftb-quest-localizer",
   "version": "1.0.0",
-  "description": "",
+  "description": "FTB Quest Localization Helper",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Soochaehwa/FTB-Quest-Localizer.git"
   },
   "author": "Soochaehwa",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Soochaehwa/FTB-Quest-Localizer/issues"
   },
   "homepage": "https://github.com/Soochaehwa/FTB-Quest-Localizer#readme",
   "dependencies": {
     "axios": "^0.27.2",
-    "axios-retry": "^3.2.5"
+    "axios-retry": "^3.2.5",
+    "inquirer": "^8.2.4"
   }
 }

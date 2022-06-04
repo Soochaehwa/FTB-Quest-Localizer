@@ -1,11 +1,9 @@
 import fs from "fs";
+import inquirer from "inquirer";
 import translate from "./modules/translate.js";
+import langs from "./langs.js";
 
-async function questExtract(chapterFile, modPack, isTranslate) {
-  // chapterFile = "getting_started.snbt";
-  isTranslate = "true";
-  modPack = "e6e";
-
+async function questExtract(chapterFile, modPackName, isTranslate, targetLang) {
   const chapter = chapterFile.replace(".snbt", "");
   const questChapter = fs
     .readFileSync(`./ftbquests/chapters/${chapterFile}`, "utf-8")
@@ -17,6 +15,7 @@ async function questExtract(chapterFile, modPack, isTranslate) {
   let rewriteChapter = questChapter;
   let lang = {};
   let translatedLang = {};
+
   const titleRegex = /\btitle: \"[\s\S.]*?\"/gm;
   const subTitleRegex = /\bsubtitle: \[?\"[\s\S.]*?\"\]?/gm;
   const descRegex = /\bdescription: \[[\s\S.]*?\]/gm;
@@ -24,6 +23,8 @@ async function questExtract(chapterFile, modPack, isTranslate) {
   const titles = questChapter.match(titleRegex);
   const subTitles = questChapter.match(subTitleRegex);
   const descriptions = questChapter.match(descRegex);
+
+  if (!titles && !subTitles && !descriptions) return;
 
   function getString(text, part) {
     const stringRegex = /(?<=("))(?:(?=(\\?))\2.)*?(?=\1)/gm;
@@ -34,78 +35,56 @@ async function questExtract(chapterFile, modPack, isTranslate) {
       .match(stringRegex);
   }
 
-  function convert(part, array, translatedArray) {
-    for (let i = 0; i < array.length; i++) {
-      const string = array[i];
-      rewriteChapter = rewriteChapter.replace(
-        `"${string}"`,
-        `"{${modPack}.${chapter}.${part}${i}}"`
-      );
-
-      if (isTranslate) {
-        const translatedString = translatedArray[i];
-        translatedLang = {
-          ...translatedLang,
-          [`${modPack}.${chapter}.${part}${i}`]: translatedString,
-        };
-      }
-
-      lang = {
-        ...lang,
-        [`${modPack}.${chapter}.${part}${i}`]: string,
-      };
-    }
+  function removeEmpty(array) {
+    return array.filter((e) => e);
   }
 
-  if (!titles && !subTitles && !descriptions) return;
+  function convert(array, part) {
+    return new Promise(async (resolve) => {
+      const sourceStrings = removeEmpty(
+        array.flatMap((el) => getString(el, `${part}`))
+      );
+
+      let translatedStrings;
+      if (isTranslate) {
+        translatedStrings = await Promise.all(
+          sourceStrings.map((sourceString) => {
+            return translate(sourceString, targetLang);
+          })
+        );
+      }
+      sourceStrings.map((sourceString, i) => {
+        rewriteChapter = rewriteChapter.replace(
+          `"${sourceString}"`,
+          `"{${modPackName}.${chapter}.${part}${i}}"`
+        );
+
+        if (isTranslate) {
+          const translatedString = translatedStrings[i];
+          translatedLang = {
+            ...translatedLang,
+            [`${modPackName}.${chapter}.${part}${i}`]: translatedString,
+          };
+        }
+
+        lang = {
+          ...lang,
+          [`${modPackName}.${chapter}.${part}${i}`]: sourceString,
+        };
+      });
+      resolve();
+    });
+  }
 
   if (titles) {
-    const sourceTitles = titles.flatMap((title) => getString(title, "title"));
-    let translateTitles;
-    if (isTranslate) {
-      translateTitles = await Promise.all(
-        sourceTitles.map((text) => {
-          return translate(text, "ko");
-        })
-      );
-    }
-    convert("title", sourceTitles, translateTitles);
+    await convert(titles, "title");
   }
-
   if (subTitles) {
-    const sourceSubTitles = subTitles.flatMap((subTitle) =>
-      getString(subTitle, "subTitle")
-    );
-    let translateSubTitles;
-    if (isTranslate) {
-      translateSubTitles = await Promise.all(
-        sourceSubTitles.map((text) => {
-          return translate(text, "ko");
-        })
-      );
-    }
-    convert("subTitle", sourceSubTitles, translateSubTitles);
+    await convert(subTitles, "subtitle");
   }
   if (descriptions) {
-    const sourceDescriptions = descriptions.flatMap((description) =>
-      getString(description, "description")
-    );
-    let translateDescriptions;
-    if (isTranslate) {
-      translateDescriptions = await Promise.all(
-        sourceDescriptions.map((text) => {
-          return translate(text, "ko");
-        })
-      );
-    }
-    convert("description", sourceDescriptions, translateDescriptions);
+    await convert(descriptions, "description");
   }
-
-  // console.log(sourceTitles);
-  // console.log(sourceSubTitles);
-  // console.log(descriptions);
-
-  // console.log(lang);
 
   fs.writeFileSync(`./output/chapters/${chapterFile}`, rewriteChapter);
 
@@ -118,26 +97,79 @@ async function questExtract(chapterFile, modPack, isTranslate) {
   }
 
   if (isTranslate) {
-    if (fs.existsSync("./output/ko_kr.json")) {
-      const langFile = fs.readFileSync(`./output/ko_kr.json`, "utf-8");
+    if (fs.existsSync("./output/translated.json")) {
+      const langFile = fs.readFileSync(`./output/translated.json`, "utf-8");
       translatedLang = { ...translatedLang, ...JSON.parse(langFile) };
       fs.writeFileSync(
-        `./output/ko_kr.json`,
+        `./output/translated.json`,
         JSON.stringify(translatedLang, null, 2)
       );
     } else {
       fs.writeFileSync(
-        `./output/ko_kr.json`,
+        `./output/translated.json`,
         JSON.stringify(translatedLang, null, 2)
       );
     }
   }
+  console.log(`${chapterFile} done`);
 }
 
-// questExtract();
+function run(modPackName, isTranslate, targetLang) {
+  fs.readdir(`./ftbquests/chapters`, function (err, fileLists) {
+    if (err) {
+      return console.error("'./ftbquests/chapters' directory not found");
+    }
+    fileLists.map((file) =>
+      questExtract(file, modPackName, isTranslate, targetLang)
+    );
+  });
+}
+
+function prompt() {
+  return inquirer.prompt([
+    {
+      name: "modPackName",
+      message: `Enter the modpack name to display in the json key:`,
+      type: "input",
+      filter: (value) => {
+        const valid = /[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/ ]/gm;
+        const result = value.replace(valid, "").toLowerCase();
+        return result;
+      },
+    },
+    {
+      name: "isTranslate",
+      message: "Do you want to output the machine translated files as well?",
+      type: "confirm",
+    },
+    {
+      name: "targetLang",
+      message: "Enter target language (e.g. en, ko, es):",
+      type: "input",
+      when: (answers) => {
+        if (answers.isTranslate === true) {
+          return true;
+        }
+      },
+      validate: (value) => {
+        if (langs.includes(value)) {
+          return true;
+        } else {
+          return "Language not supported";
+        }
+      },
+    },
+  ]);
+}
 
 (async () => {
-  fs.readdir(`./ftbquests/chapters`, function (err, fileLists) {
-    fileLists.map((file) => questExtract(file, "e6e", true));
-  });
+  console.info(
+    "Extracts text from chapter files to converts them for easy localization"
+  );
+  console.info(
+    "The root directory must have the ftbquests directory to extract"
+  );
+  console.info("Output is created in the output directory");
+  const answers = await prompt();
+  run(answers.modPackName, answers.isTranslate, answers.targetLang);
 })();
