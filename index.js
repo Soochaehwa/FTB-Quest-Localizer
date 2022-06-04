@@ -151,6 +151,11 @@ function prompt() {
         const result = value.replace(valid, "");
         return result;
       },
+      validate: (value) => {
+        if (!value) {
+          return "Modpack name is required";
+        }
+      },
     },
     {
       name: "isTranslate",
