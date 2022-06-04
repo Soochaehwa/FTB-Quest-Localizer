@@ -154,7 +154,8 @@ function prompt() {
     },
     {
       name: "isTranslate",
-      message: "Do you want to output the machine translated files as well?",
+      message:
+        "Do you also output machine translated(with Google Translate) files?",
       type: "confirm",
     },
     {
