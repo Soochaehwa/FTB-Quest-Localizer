@@ -154,6 +154,8 @@ function prompt() {
       validate: (value) => {
         if (!value) {
           return "Modpack name is required";
+        } else {
+          return true;
         }
       },
     },
