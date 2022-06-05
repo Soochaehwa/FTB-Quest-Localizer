@@ -1,6 +1,7 @@
-
-## Description
+# FTB Quest Localizer 
 In most modpacks, the FTB quest string is hard coded in the .snbt file, so localization is cumbersome. This application allows you to extract quest strings into a json file for ease of localization and you can easily create a rough translation through Google Translate.
+
+**Note: Works only with Minecraft 1.15+ modpacks**
 
 ## Installation
 
