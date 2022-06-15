@@ -23,6 +23,7 @@ export default async function translate(
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53",
     };
 
+    sourceText = `"${sourceText}"`;
     const trText = await axios.get(GOOGLE_API, {
       headers,
       params: {
@@ -33,7 +34,7 @@ export default async function translate(
       },
     });
 
-    const translatedText = trText.data[0][0][0];
+    const translatedText = trText.data[0][0][0].slice(0, -1).slice(1);
     return translatedText;
   } catch (err) {
     return sourceText;
