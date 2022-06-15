@@ -49,6 +49,9 @@ async function questExtract(chapterFile, modPackName, isTranslate, targetLang) {
       if (isTranslate) {
         translatedStrings = await Promise.all(
           sourceStrings.map((sourceString) => {
+            if (sourceString.includes("image:kubejs:textures")) {
+              return sourceString;
+            }
             return translate(sourceString, targetLang);
           })
         );
