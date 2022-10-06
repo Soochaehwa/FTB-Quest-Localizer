@@ -19,6 +19,7 @@ async function questExtract(chapterFile, modPackName, isTranslate, targetLang) {
   const titleRegex = /\btitle: \"[\s\S.]*?\"/gm;
   const subTitleRegex = /\bsubtitle: \[?\"[\s\S.]*?\"\]?/gm;
   const descRegex = /\bdescription: \[[\s\S.]*?\]/gm;
+  const imageRegex = /^{image:[0-9a-zA-Z]*:.*}$/gm;
 
   const titles = questChapter.match(titleRegex);
   const subTitles = questChapter.match(subTitleRegex);
@@ -49,7 +50,7 @@ async function questExtract(chapterFile, modPackName, isTranslate, targetLang) {
       if (isTranslate) {
         translatedStrings = await Promise.all(
           sourceStrings.map((sourceString) => {
-            if (sourceString.includes("image:kubejs:textures")) {
+            if (sourceString.match(imageRegex)) {
               return sourceString;
             }
             return translate(sourceString, targetLang);
