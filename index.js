@@ -6,7 +6,7 @@ import langs from "./langs.js";
 async function questExtract(chapterFile, modPackName, isTranslate, targetLang) {
   const chapter = chapterFile.replace(".snbt", "");
   const questChapter = fs
-    .readFileSync(`./ftbquests/chapters/${chapterFile}`, "utf-8")
+    .readFileSync(`./ftbquests/quests/chapters/${chapterFile}`, "utf-8")
     .replaceAll('\\"', "'");
 
   !fs.existsSync(`./output/${modPackName}/chapters`) &&
@@ -133,9 +133,9 @@ async function questExtract(chapterFile, modPackName, isTranslate, targetLang) {
 }
 
 function run(modPackName, isTranslate, targetLang) {
-  fs.readdir(`./ftbquests/chapters`, function (err, fileLists) {
+  fs.readdir(`./ftbquests/quests/chapters`, function (err, fileLists) {
     if (err) {
-      return console.error("'./ftbquests/chapters' directory not found");
+      return console.error("'./ftbquests/quests/chapters' directory not found");
     }
     fileLists.map((file) =>
       questExtract(file, modPackName, isTranslate, targetLang)

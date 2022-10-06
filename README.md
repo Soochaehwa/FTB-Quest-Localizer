@@ -10,7 +10,7 @@ In most modpacks, the FTB quest string is hard coded in the .snbt file, so local
     npm install
     
 ## Usage
-The root directory must have a ftbquests directory to extract.
+The root directory must have a `ftbquests` directory to extract.
 
     npm run start
 Answer the questions in the prompt
