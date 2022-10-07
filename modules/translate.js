@@ -24,7 +24,7 @@ export default async function translate(
     };
 
     sourceText = `"${sourceText}"`;
-    const trText = await axios.get(GOOGLE_API, {
+    const res = await axios.get(GOOGLE_API, {
       headers,
       params: {
         dt: "t",
@@ -34,7 +34,10 @@ export default async function translate(
       },
     });
 
-    const translatedText = trText.data[0][0][0].replaceAll('"', "");
+    const translatedText = res.data[0]
+      .map((el) => el[0])
+      .join("")
+      .replaceAll('"', "");
     return translatedText;
   } catch (err) {
     return sourceText;
