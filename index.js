@@ -20,6 +20,7 @@ async function questExtract(chapterFile, modPackName, isTranslate, targetLang) {
   const subTitleRegex = /\bsubtitle: \[?\"[\s\S.]*?\"\]?/gm;
   const descRegex = /\bdescription: \[[\s\S.]*?\]/gm;
   const imageRegex = /^{image:[0-9a-zA-Z]*:.*}$/gm;
+  const colorCodeRegex = /&[0-9A-FK-OR]/gim;
 
   const titles = questChapter.match(titleRegex);
   const subTitles = questChapter.match(subTitleRegex);
@@ -40,6 +41,10 @@ async function questExtract(chapterFile, modPackName, isTranslate, targetLang) {
     return array.filter((e) => e);
   };
 
+  const addQuotes = (match) => {
+    return '"' + match + '"';
+  };
+
   const convert = (array, part) => {
     return new Promise(async (resolve) => {
       const sourceStrings = removeEmpty(
@@ -53,7 +58,10 @@ async function questExtract(chapterFile, modPackName, isTranslate, targetLang) {
             if (sourceString.match(imageRegex)) {
               return sourceString;
             }
-            return translate(sourceString, targetLang);
+            return translate(
+              sourceString.replace(colorCodeRegex, addQuotes),
+              targetLang
+            );
           })
         );
       }

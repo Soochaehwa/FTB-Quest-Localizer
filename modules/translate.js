@@ -34,7 +34,7 @@ export default async function translate(
       },
     });
 
-    const translatedText = trText.data[0][0][0].slice(0, -1).slice(1);
+    const translatedText = trText.data[0][0][0].replaceAll('"', "");
     return translatedText;
   } catch (err) {
     return sourceText;
